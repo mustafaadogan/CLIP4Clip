@@ -5,6 +5,7 @@ from dataloaders.dataloader_msrvtt_retrieval import MSRVTT_TrainDataLoader
 from dataloaders.dataloader_msvd_retrieval import MSVD_DataLoader
 from dataloaders.dataloader_lsmdc_retrieval import LSMDC_DataLoader
 from dataloaders.dataloader_activitynet_retrieval import ActivityNet_DataLoader
+from dataloaders.dataloader_vlbench_retrieval import VLBENCH_DataLoader
 from dataloaders.dataloader_didemo_retrieval import DiDeMo_DataLoader
 
 def dataloader_msrvtt_train(args, tokenizer):
@@ -53,6 +54,26 @@ def dataloader_msrvtt_test(args, tokenizer, subset="test"):
         drop_last=False,
     )
     return dataloader_msrvtt, len(msrvtt_testset)
+
+def dataloader_vlbench_test(args, tokenizer, subset="test"):
+    vlbench_testset = VLBENCH_DataLoader(
+        json_path=args.val_csv,
+        features_path=args.features_path,
+        max_words=args.max_words,
+        feature_framerate=args.feature_framerate,
+        tokenizer=tokenizer,
+        max_frames=args.max_frames,
+        frame_order=args.eval_frame_order,
+        slice_framepos=args.slice_framepos,
+    )
+    dataloader_vlbench = DataLoader(
+        vlbench_testset,
+        batch_size=args.batch_size_val,
+        num_workers=args.num_thread_reader,
+        shuffle=False,
+        drop_last=False,
+    )
+    return dataloader_vlbench, len(vlbench_testset)
 
 
 def dataloader_msvd_train(args, tokenizer):
@@ -253,3 +274,4 @@ DATALOADER_DICT["msvd"] = {"train":dataloader_msvd_train, "val":dataloader_msvd_
 DATALOADER_DICT["lsmdc"] = {"train":dataloader_lsmdc_train, "val":dataloader_lsmdc_test, "test":dataloader_lsmdc_test}
 DATALOADER_DICT["activity"] = {"train":dataloader_activity_train, "val":dataloader_activity_test, "test":None}
 DATALOADER_DICT["didemo"] = {"train":dataloader_didemo_train, "val":dataloader_didemo_test, "test":dataloader_didemo_test}
+DATALOADER_DICT["vlbench"] = {"train": dataloader_vlbench_test, "val": dataloader_vlbench_test, "test":None}
