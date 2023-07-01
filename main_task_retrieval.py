@@ -306,17 +306,15 @@ def _run_on_single_gpu(model, batch_list_t, batch_list_v, batch_sequence_output_
     sim_matrix = []
     for idx1, b1 in enumerate(batch_list_t):
         input_mask, segment_ids, *_tmp = b1
+        video_mask, *_tmp = batch_list_v[idx1]
         sequence_output = batch_sequence_output_list[idx1]
+        visual_output = batch_visual_output_list[idx1]
         each_row = []
-        for idx2, b2 in enumerate(batch_list_v):
-            video_mask, *_tmp = b2
-            visual_output = batch_visual_output_list[idx2]
-            b1b2_logits, *_tmp = model.get_similarity_logits(sequence_output, visual_output, input_mask, video_mask,
-                                                                     loose_type=model.loose_type)
-            b1b2_logits = b1b2_logits.cpu().detach().numpy()
-            each_row.append(b1b2_logits)
-        each_row = np.concatenate(tuple(each_row), axis=-1)
-        sim_matrix.append(each_row)
+        
+        b1b2_logits, *_tmp = model.get_similarity_logits(sequence_output, visual_output, input_mask, video_mask,
+                                                                    loose_type=model.loose_type)
+        b1b2_logits = b1b2_logits.cpu().detach().numpy()
+        sim_matrix.append(b1b2_logits)
     return sim_matrix
 
 def eval_epoch(args, model, test_dataloader, device, n_gpu):
@@ -451,6 +449,11 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
         logger.info('\t Length-T: {}, Length-V:{}'.format(len(sim_matrix), len(sim_matrix[0])))
     
     print(sim_matrix)
+    with open(r'Output.txt', 'w') as fp:
+        for item in sim_matrix:
+            # write each item on a new line
+            fp.write("%s\n" % item[0])
+        
     logger.info("Text-to-Video:")
     logger.info('\t>>>  R@1: {:.1f} - R@5: {:.1f} - R@10: {:.1f} - Median R: {:.1f} - Mean R: {:.1f}'.
                 format(tv_metrics['R1'], tv_metrics['R5'], tv_metrics['R10'], tv_metrics['MR'], tv_metrics['MeanR']))
