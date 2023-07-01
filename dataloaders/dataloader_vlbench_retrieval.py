@@ -31,15 +31,18 @@ class VLBENCH_DataLoader(Dataset):
         _idx = 0
         data = {}
         for k in temp_data.keys():
+          data[_idx] = {}  
           data[_idx]['video_file'] = temp_data[k]['video_file']
           data[_idx]['sentence']   = temp_data[k]['caption']
           _idx += 1
 
           for foil in temp_data[k]['foils']:
+            data[_idx] = {} 
             data[_idx]['video_file'] = temp_data[k]['video_file']
             data[_idx]['sentence']   = foil
             _idx += 1
 
+          data[_idx] = {} 
           data[_idx]['video_file'] = temp_data[k]['video_file']
           data[_idx]['sentence']   = temp_data[k]['proficiency']['foiled_caption']
           _idx += 1
