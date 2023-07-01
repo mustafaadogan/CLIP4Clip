@@ -75,7 +75,8 @@ def get_args(description='CLIP4Clip on Retrieval Task'):
     parser.add_argument("--datatype", default="msrvtt", type=str, help="Point the dataset to finetune.")
 
     parser.add_argument("--world_size", default=0, type=int, help="distribted training")
-    parser.add_argument("--local_rank", default=0, type=int, help="distribted training")
+    parser.add_argument("--local-rank", default=0, type=int, help="distribted training")
+    local_rank = os.environ['LOCAL_RANK']
     parser.add_argument("--rank", default=0, type=int, help="distribted training")
     parser.add_argument('--coef_lr', type=float, default=1., help='coefficient for bert branch.')
     parser.add_argument('--use_mil', action='store_true', help="Whether use MIL as Miech et. al. (2020).")
@@ -448,7 +449,8 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
         tv_metrics = compute_metrics(sim_matrix)
         vt_metrics = compute_metrics(sim_matrix.T)
         logger.info('\t Length-T: {}, Length-V:{}'.format(len(sim_matrix), len(sim_matrix[0])))
-
+    
+    print(sim_matrix)
     logger.info("Text-to-Video:")
     logger.info('\t>>>  R@1: {:.1f} - R@5: {:.1f} - R@10: {:.1f} - Median R: {:.1f} - Mean R: {:.1f}'.
                 format(tv_metrics['R1'], tv_metrics['R5'], tv_metrics['R10'], tv_metrics['MR'], tv_metrics['MeanR']))
