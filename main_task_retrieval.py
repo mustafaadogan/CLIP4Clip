@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import torch
+import json
 import numpy as np
 import random
 import os
@@ -446,13 +447,7 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
         logger.info("sim matrix size: {}, {}".format(sim_matrix.shape[0], sim_matrix.shape[1]))
         tv_metrics = compute_metrics(sim_matrix)
         vt_metrics = compute_metrics(sim_matrix.T)
-        logger.info('\t Length-T: {}, Length-V:{}'.format(len(sim_matrix), len(sim_matrix[0])))
-    
-    print(sim_matrix)
-    with open(r'Output.txt', 'w') as fp:
-        for item in sim_matrix:
-            # write each item on a new line
-            fp.write("%s\n" % item[0])
+        logger.info('\t Length-T: {}, Length-V:{}'.format(len(sim_matrix), len(sim_matrix[0]))
         
     logger.info("Text-to-Video:")
     logger.info('\t>>>  R@1: {:.1f} - R@5: {:.1f} - R@10: {:.1f} - Median R: {:.1f} - Mean R: {:.1f}'.
@@ -462,6 +457,30 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
                 format(vt_metrics['R1'], vt_metrics['R5'], vt_metrics['R10'], vt_metrics['MR'], vt_metrics['MeanR']))
 
     R1 = tv_metrics['R1']
+
+    f = open(args.val_csv)
+    data = json.load(f)
+    total_results = {}
+    consumed_result_idx = 0
+    
+    for k in data.keys():
+        results = {}
+        results['scores'] = []
+        results['scores'].append(float(sim_matrix[consumed_result_idx][0]))
+        consumed_result_idx += 1
+        
+        for foil_idx in range(len(data[k]['foils'])):
+            results['scores'].append(float(sim_matrix[consumed_result_idx][0]))
+            consumed_result_idx += 1
+        
+        results['scores'].append(float(sim_matrix[consumed_result_idx][0]))
+        consumed_result_idx += 1
+
+        total_results[k] = results
+
+    with open(f"{args.output_dir}/Output.json", "w") as outfile:
+        json.dump(total_results, outfile, indent=4)
+        
     return R1
 
 def main():
