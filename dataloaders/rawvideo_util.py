@@ -58,7 +58,7 @@ class RawVideoExtractorCV2():
             if not ret: break
             sec_base = int(sec * fps)
             for ind in inds:
-                cap.set(cv2.CAP_PROP_POS_FRAMES, sec_base + ind)
+                #cap.set(cv2.CAP_PROP_POS_FRAMES, sec_base + ind)
                 ret, frame = cap.read()
                 if not ret: break
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
