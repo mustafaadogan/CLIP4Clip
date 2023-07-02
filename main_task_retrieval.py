@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import torch
 import json
+from tqdm import tqdm
 import numpy as np
 import random
 import os
@@ -356,7 +357,7 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
         # ----------------------------
         # 1. cache the features
         # ----------------------------
-        for bid, batch in enumerate(test_dataloader):
+        for bid, batch in enumerate(tqdm(test_dataloader)):
             batch = tuple(t.to(device) for t in batch)
             input_ids, input_mask, segment_ids, video, video_mask = batch
 
@@ -385,7 +386,7 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
                 batch_visual_output_list.append(visual_output)
                 batch_list_v.append((video_mask,))
 
-            print("{}/{}\r".format(bid, len(test_dataloader)), end="")
+            #print("{}/{}\r".format(bid, len(test_dataloader)), end="")
 
         # ----------------------------------
         # 2. calculate the similarity
