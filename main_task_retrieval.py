@@ -77,8 +77,8 @@ def get_args(description='CLIP4Clip on Retrieval Task'):
     parser.add_argument("--datatype", default="msrvtt", type=str, help="Point the dataset to finetune.")
 
     parser.add_argument("--world_size", default=0, type=int, help="distribted training")
-    parser.add_argument("--local-rank", default=0, type=int, help="distribted training")
-    local_rank = os.environ['LOCAL_RANK']
+    parser.add_argument("--local_rank", default=0, type=int, help="distribted training")
+    #local_rank = os.environ['LOCAL_RANK']
     parser.add_argument("--rank", default=0, type=int, help="distribted training")
     parser.add_argument('--coef_lr', type=float, default=1., help='coefficient for bert branch.')
     parser.add_argument('--use_mil', action='store_true', help="Whether use MIL as Miech et. al. (2020).")
@@ -386,7 +386,7 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
                 batch_visual_output_list.append(visual_output)
                 batch_list_v.append((video_mask,))
 
-            #print("{}/{}\r".format(bid, len(test_dataloader)), end="")
+            print("{}/{}\r".format(bid, len(test_dataloader)), end="")
 
         # ----------------------------------
         # 2. calculate the similarity
@@ -430,6 +430,40 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
             sim_matrix = _run_on_single_gpu(model, batch_list_t, batch_list_v, batch_sequence_output_list, batch_visual_output_list)
             sim_matrix = np.concatenate(tuple(sim_matrix), axis=0)
 
+    f = open(args.val_csv)
+    data = json.load(f)
+    task_results = {}
+    prof_results = {}
+    consumed_result_idx = 0
+   
+    for k in data.keys():
+        task_result = {}
+        prof_result = {}
+        task_result['scores'] = []
+        prof_result['scores'] = []
+        task_result['scores'].append(float(sim_matrix[consumed_result_idx][0]))
+        consumed_result_idx += 1
+       
+        for foil_idx in range(len(data[k]['foils'])):
+            task_result['scores'].append(float(sim_matrix[consumed_result_idx][0]))
+            consumed_result_idx += 1
+       
+        prof_result['scores'].append(float(sim_matrix[consumed_result_idx][0]))
+        consumed_result_idx += 1
+
+        prof_result['scores'].append(float(sim_matrix[consumed_result_idx][0]))
+        consumed_result_idx += 1
+       
+        task_results[k] = task_result
+        prof_results[k] = prof_result
+
+    with open(f"{args.output_dir}/Task_Results.json", "w") as task_outfile:
+        json.dump(task_results, task_outfile, indent=4)
+
+    with open(f"{args.output_dir}/Prof_Results.json", "w") as prof_outfile:
+        json.dump(task_results, prof_outfile, indent=4)
+
+    
     if multi_sentence_:
         logger.info("before reshape, sim matrix size: {} x {}".format(sim_matrix.shape[0], sim_matrix.shape[1]))
         cut_off_points2len_ = [itm + 1 for itm in cut_off_points_]
@@ -458,29 +492,6 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
                 format(vt_metrics['R1'], vt_metrics['R5'], vt_metrics['R10'], vt_metrics['MR'], vt_metrics['MeanR']))
 
     R1 = tv_metrics['R1']
-
-    f = open(args.val_csv)
-    data = json.load(f)
-    total_results = {}
-    consumed_result_idx = 0
-    
-    for k in data.keys():
-        results = {}
-        results['scores'] = []
-        results['scores'].append(float(sim_matrix[consumed_result_idx][0]))
-        consumed_result_idx += 1
-        
-        for foil_idx in range(len(data[k]['foils'])):
-            results['scores'].append(float(sim_matrix[consumed_result_idx][0]))
-            consumed_result_idx += 1
-        
-        results['scores'].append(float(sim_matrix[consumed_result_idx][0]))
-        consumed_result_idx += 1
-
-        total_results[k] = results
-
-    with open(f"{args.output_dir}/Output.json", "w") as outfile:
-        json.dump(total_results, outfile, indent=4)
         
     return R1
 
