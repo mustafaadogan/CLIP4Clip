@@ -77,8 +77,8 @@ def get_args(description='CLIP4Clip on Retrieval Task'):
     parser.add_argument("--datatype", default="msrvtt", type=str, help="Point the dataset to finetune.")
 
     parser.add_argument("--world_size", default=0, type=int, help="distribted training")
-    parser.add_argument("--local_rank", default=0, type=int, help="distribted training")
-    #local_rank = os.environ['LOCAL_RANK']
+    parser.add_argument("--local-rank", default=0, type=int, help="distribted training")
+    local_rank = os.environ['LOCAL_RANK']
     parser.add_argument("--rank", default=0, type=int, help="distribted training")
     parser.add_argument('--coef_lr', type=float, default=1., help='coefficient for bert branch.')
     parser.add_argument('--use_mil', action='store_true', help="Whether use MIL as Miech et. al. (2020).")
@@ -461,7 +461,7 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
         json.dump(task_results, task_outfile, indent=4)
 
     with open(f"{args.output_dir}/Prof_Results.json", "w") as prof_outfile:
-        json.dump(task_results, prof_outfile, indent=4)
+        json.dump(prof_results, prof_outfile, indent=4)
 
     
     if multi_sentence_:
