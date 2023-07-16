@@ -457,7 +457,7 @@ def eval_epoch(args, model, test_dataloader, device, n_gpu):
         task_results[k] = task_result
         prof_results[k] = prof_result
 
-    with open(f"{args.output_dir}/Task_Results.json", "w") as task_outfile:
+    with open(f"{args.output_dir}/Main_Task_Results.json", "w") as task_outfile:
         json.dump(task_results, task_outfile, indent=4)
 
     with open(f"{args.output_dir}/Prof_Results.json", "w") as prof_outfile:
