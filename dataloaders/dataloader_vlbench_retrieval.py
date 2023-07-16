@@ -32,7 +32,7 @@ class VLBENCH_DataLoader(Dataset):
         data = {}
         for k in temp_data.keys():
           data[_idx] = {}  
-          video_name = "clip_" + temp_data[k]['video_file']
+          video_name = temp_data[k]['video_file']
           
           data[_idx]['video_file'] = video_name
           data[_idx]['sentence']   = temp_data[k]['caption']
@@ -48,12 +48,13 @@ class VLBENCH_DataLoader(Dataset):
           data[_idx]['video_file'] = video_name
           data[_idx]['sentence']   = temp_data[k]['proficiency']['caption']
           _idx += 1
-          
-          data[_idx] = {} 
-          data[_idx]['video_file'] = video_name
-          data[_idx]['sentence']   = temp_data[k]['proficiency']['foiled_caption']
-          _idx += 1
-      
+        
+          for foil in temp_data[k]['proficiency']['foils']:
+            data[_idx] = {} 
+            data[_idx]['video_file'] = video_name
+            data[_idx]['sentence']   = foil
+            _idx += 1
+
         self.data = data  
         self.features_path = features_path
         self.feature_framerate = feature_framerate
