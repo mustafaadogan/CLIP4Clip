@@ -33,26 +33,36 @@ class VLBENCH_DataLoader(Dataset):
         for k in temp_data.keys():
           data[_idx] = {}  
           video_name = temp_data[k]['video_file']
-          
+          start_time = temp_data[k]['start_time']
+          end_time   = temp_data[k]['end_time']
+
           data[_idx]['video_file'] = video_name
           data[_idx]['sentence']   = temp_data[k]['caption']
+          data[_idx]['start_time'] = start_time
+          data[_idx]['end_time']   = end_time
           _idx += 1
 
           for foil in temp_data[k]['foils']:
             data[_idx] = {} 
             data[_idx]['video_file'] = video_name
             data[_idx]['sentence']   = foil
+            data[_idx]['start_time'] = start_time
+            data[_idx]['end_time']   = end_time
             _idx += 1
 
           data[_idx] = {}
           data[_idx]['video_file'] = video_name
           data[_idx]['sentence']   = temp_data[k]['proficiency']['caption']
+          data[_idx]['start_time'] = start_time
+          data[_idx]['end_time']   = end_time
           _idx += 1
         
           for foil in temp_data[k]['proficiency']['foils']:
             data[_idx] = {} 
             data[_idx]['video_file'] = video_name
             data[_idx]['sentence']   = foil
+            data[_idx]['start_time'] = start_time
+            data[_idx]['end_time']   = end_time
             _idx += 1
 
         self.data = data  
@@ -110,7 +120,7 @@ class VLBENCH_DataLoader(Dataset):
 
         return pairs_text, pairs_mask, pairs_segment, choice_video_ids
 
-    def _get_rawvideo(self, choice_video_ids):
+    def _get_rawvideo(self, choice_video_ids, start_time, end_time):
         video_mask = np.zeros((len(choice_video_ids), self.max_frames), dtype=np.longlong)
         max_video_length = [0] * len(choice_video_ids)
 
@@ -124,7 +134,7 @@ class VLBENCH_DataLoader(Dataset):
             if os.path.exists(video_path) is False:
                 video_path = video_path.replace(".mp4", ".webm")
 
-            raw_video_data = self.rawVideoExtractor.get_video_data(video_path)
+            raw_video_data = self.rawVideoExtractor.get_video_data(video_path, start_time, end_time)
             raw_video_data = raw_video_data['video']
             if len(raw_video_data.shape) > 3:
                 raw_video_data_clip = raw_video_data
@@ -158,9 +168,11 @@ class VLBENCH_DataLoader(Dataset):
         return video, video_mask
 
     def __getitem__(self, idx):
-        video_id = self.data[idx]['video_file']
-        sentence = self.data[idx]['sentence']
+        video_id   = self.data[idx]['video_file']
+        sentence   = self.data[idx]['sentence']
+        start_time = self.data[idx]['start_time']
+        end_time   = self.data[idx]['end_time']
 
         pairs_text, pairs_mask, pairs_segment, choice_video_ids = self._get_text(video_id, sentence)
-        video, video_mask = self._get_rawvideo(choice_video_ids)
+        video, video_mask = self._get_rawvideo(choice_video_ids, start_time, end_time)
         return pairs_text, pairs_mask, pairs_segment, video, video_mask
